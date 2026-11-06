@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-title" content="余白">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 180 180%22%3E%3Crect width=%22180%22 height=%22180%22 fill=%22#fff%22/%3E%3Crect x=%2219%22 y=%2252%22 width=%22142%22 height=%2276%22 fill=%22#222%22/%3E%3C/svg%3E" type="image/svg+xml">
+<!-- iOS は manifest の icon を見ない。PNG を git に置かない決まりなので、180x180 の PNG を文字で埋める -->
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAABXElEQVR42u3VsQ3AIBAEQWPRyfdf0tdybsAREYiZnOS0ekaSB/68JkAciANxIA7EgTgQB+JAHIgDxIE4EAfiQByIA3EgDsSBOEAciANxIA7EgTgQB+JAHIgDxIE4EAfiQByIA3EgDsSBOBAHiANxIA7EgTgQB+JAHIiD+8zll1VlviN0t8uBbwVxIA7EgTgQB+JAHCAOxIE4EAfiQByIA3EgDsQB4kAciANxIA7EgTgQB+JAHCAOxIE4EAfiQByIA3EgDsSBOEAciANxIA7EgTgQB+JAHIgDxIE4EAfiQByIA3EgDsSBOEAciANxIA7EgTgQB+JAHIgDcYA4EAfiQByIgx2NJFbA5UAciANxIA7EgTgQB+JAHCAOxIE4EAfiQByIA3EgDsQB4kAciANxIA7EgTgQB+JAHIgDxIE4EAfiQByIA3EgDsSBOEAciANxIA7EgTgQB+JAHFzmA3TKCmP4uGJKAAAAAElFTkSuQmCC">
+<title>余白</title>
+<style>
+  :root {
+    --bg: #f2f2f2;
+    --fg: #111;
+    --muted: #777;
+    --line: #d9d9d9;
+    --accent: #111;
+    --safe-b: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg);
+    font: 15px/1.5 -apple-system, "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+    -webkit-text-size-adjust: 100%; }
+  body { min-height: 100dvh; display: flex; flex-direction: column; }
+  header { padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 8px; display: flex; align-items: baseline; gap: 10px; }
+  header h1 { font-size: 17px; font-weight: 600; margin: 0; letter-spacing: .04em; }
+  header small { color: var(--muted); font-variant-numeric: tabular-nums; }
+  main { flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 0 16px; }
+  .stage { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+  canvas { max-width: 100%; max-height: 100%; box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 8px 24px rgba(0,0,0,.08); background: #fff; display: block; }
+  .empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); text-align: center; padding: 24px; }
+  .empty.hidden { display: none; }
+  .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; padding-bottom: 8px; }
+  .controls label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+  .controls label > span b { color: var(--fg); font-weight: 500; font-variant-numeric: tabular-nums; }
+  select, input[type=range], input[type=color] { width: 100%; font: inherit; }
+  select { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--fg); -webkit-appearance: none; appearance: none; }
+  input[type=color] { height: 38px; padding: 2px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+  input[type=range] { accent-color: var(--accent); }
+  .bar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 8px 16px calc(var(--safe-b) + 14px); background: var(--bg); position: sticky; bottom: 0; }
+  button { font: inherit; font-weight: 600; padding: 14px; border-radius: 12px; border: 1px solid var(--fg); background: #fff; color: var(--fg); }
+  button.primary { background: var(--fg); color: #fff; }
+  button:disabled { opacity: .35; }
+  input[type=file] { display: none; }
+  .note { font-size: 12px; color: var(--muted); margin: 0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>余白</h1>
+  <small id="dim">写真を選ぶ</small>
+</header>
+<main>
+  <div class="stage">
+    <canvas id="c" width="1080" height="1080"></canvas>
+    <div class="empty" id="empty">写真を選ぶと、ここに白い余白つきの絵が出る。<br>写真は端末の外に出ない。</div>
+  </div>
+  <div class="controls">
+    <label>型
+      <select id="ratio">
+        <option value="1:1" selected>正方形 1:1</option>
+        <option value="4:5">フィード 4:5</option>
+        <option value="9:16">ストーリー 9:16</option>
+      </select>
+    </label>
+    <label>書き出し
+      <select id="size">
+        <option value="1080" selected>1080（Instagram 基準）</option>
+        <option value="2160">2160（2 倍）</option>
+      </select>
+    </label>
+    <label><span>余白 <b id="mv">6.5%</b></span>
+      <input type="range" id="margin" min="0" max="20" step="0.5" value="6.5">
+    </label>
+    <label>背景の色
+      <input type="color" id="bg" value="#ffffff">
+    </label>
+  </div>
+  <p class="note">余白は長辺に対する比率。短辺側は中央に置く。書き出しは JPEG で、位置情報などの EXIF は残らない。</p>
+</main>
+<div class="bar">
+  <button id="pick">写真を選ぶ</button>
+  <button id="save" class="primary" disabled>保存</button>
+</div>
+<input type="file" id="file" accept="image/*">
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const canvas = $('c'), ctx = canvas.getContext('2d');
+  const ui = { ratio: $('ratio'), size: $('size'), margin: $('margin'), bg: $('bg'), mv: $('mv'), dim: $('dim'), empty: $('empty'), save: $('save') };
+  let img = null;
+  let srcName = 'photo';
+
+  const RATIOS = { '1:1': [1, 1], '4:5': [4, 5], '9:16': [9, 16] };
+
+  // 添付のスクショから測った基準: 正方形の背景に 3:2 の写真。左右の余白が背景の 6.5%、上下は中央。
+  // 一般化: 余白 m は背景の長辺の比率。写真は (W-2m, H-2m) に収まる最大の大きさで中央に置く。
+  function layout(W, H, pw, ph, marginPct) {
+    const m = Math.round(Math.max(W, H) * marginPct / 100);
+    const s = Math.min((W - 2 * m) / pw, (H - 2 * m) / ph);
+    const w = Math.round(pw * s), h = Math.round(ph * s);
+    return { x: Math.round((W - w) / 2), y: Math.round((H - h) / 2), w, h, m };
+  }
+
+  function render() {
+    const [rw, rh] = RATIOS[ui.ratio.value];
+    const base = parseInt(ui.size.value, 10);
+    const W = base, H = Math.round(base * rh / rw);
+    canvas.width = W; canvas.height = H;
+    ctx.fillStyle = ui.bg.value;
+    ctx.fillRect(0, 0, W, H);
+    ui.mv.textContent = `${Number(ui.margin.value).toFixed(1)}%`;
+    if (!img) { ui.dim.textContent = '写真を選ぶ'; return; }
+    const L = layout(W, H, img.naturalWidth, img.naturalHeight, Number(ui.margin.value));
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, L.x, L.y, L.w, L.h);
+    ui.dim.textContent = `${W}×${H} / 写真 ${L.w}×${L.h} / 余白 ${L.m}px`;
+  }
+
+  async function load(file) {
+    if (!file) return;
+    srcName = (file.name || 'photo').replace(/\.[^.]+$/, '');
+    const url = URL.createObjectURL(file);
+    const el = new Image();
+    el.src = url;
+    try { await el.decode(); } catch (e) { alert('この画像は読めなかった'); URL.revokeObjectURL(url); return; }
+    img = el;
+    ui.empty.classList.add('hidden');
+    ui.save.disabled = false;
+    render();
+  }
+
+  async function save() {
+    const blob = await new Promise((r) => canvas.toBlob(r, 'image/jpeg', 0.92));
+    const name = `${srcName}-yohaku-${ui.ratio.value.replace(':', 'x')}.jpg`;
+    const file = new File([blob], name, { type: 'image/jpeg' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file] }); return; } catch (e) { if (e.name === 'AbortError') return; }
+    }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  $('pick').addEventListener('click', () => $('file').click());
+  $('file').addEventListener('change', (e) => load(e.target.files[0]));
+  ui.save.addEventListener('click', save);
+  for (const k of ['ratio', 'size', 'margin', 'bg']) ui[k].addEventListener('input', render);
+
+  // PC で試すとき用: ドラッグ & ドロップ
+  document.addEventListener('dragover', (e) => e.preventDefault());
+  document.addEventListener('drop', (e) => { e.preventDefault(); load(e.dataTransfer.files[0]); });
+
+  // オフラインでも開けるように登録する。file:// や http では動かないので握りつぶす
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+
+  // 検証用に外へ出す
+  window.__yohaku = { layout, render, canvas };
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "name": "余白",
+  "short_name": "余白",
+  "description": "Instagram 用に写真の周りへ白い余白を付ける",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f2f2f2",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 180 180%22%3E%3Crect width=%22180%22 height=%22180%22 fill=%22#fff%22/%3E%3Crect x=%2219%22 y=%2252%22 width=%22142%22 height=%2276%22 fill=%22#222%22/%3E%3C/svg%3E",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
