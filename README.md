@@ -10,7 +10,7 @@ A tiny web app that pads a photo with a white margin so Instagram shows the whol
 
 - 写真を選ぶと、白い背景の中央に置いた絵が出る
 - 型は正方形 1:1、フィード 4:5、ストーリー 9:16
-- 余白は背景の長辺に対する比率。既定は 6.5%
+- 余白は横幅に対する比率。既定は 6.5%。型を変えても写真の幅は同じで、上下の白だけ変わる
 - 背景の色を変えられる
 - 保存すると JPEG（長辺 1080 px、または 2160 px）が共有シートに出る。iPhone なら「画像を保存」で写真アプリに入る
 
@@ -33,16 +33,18 @@ A tiny web app that pads a photo with a white margin so Instagram shows the whol
 | 左右の余白 | 背景の 6.5% |
 | 上下 | 中央 |
 
-一般化すると、余白 m を背景の長辺 × 6.5% とし、写真は幅 W−2m、高さ H−2m に収まる最大の大きさで中央に置く。横写真なら左右が m、縦写真なら上下が m になる。1080×1080 に 3:2 の写真を置くと、写真は 940×627、余白は左右 70 px。
+一般化すると、余白 m を背景の横幅（短辺）× 6.5% とし、写真は幅 W−2m、高さ H−2m に収まる最大の大きさで中央に置く。1080×1080 に 3:2 の写真を置くと、写真は 940×627、余白は左右 70 px。4:5 や 9:16 にしても写真は 940×627 のままで、上下の白だけ増える。
 
 ```js
 function layout(W, H, pw, ph, marginPct) {
-  const m = Math.round(Math.max(W, H) * marginPct / 100);
+  const m = Math.round(Math.min(W, H) * marginPct / 100);
   const s = Math.min((W - 2 * m) / pw, (H - 2 * m) / ph);
   const w = Math.round(pw * s), h = Math.round(ph * s);
   return { x: Math.round((W - w) / 2), y: Math.round((H - h) / 2), w, h, m };
 }
 ```
+
+ストーリーに出すときは、9:16 で書き出すより、1:1 で書き出した正方形を Instagram のストーリー作成で色の背景の上に置くほうが、白い枠がはっきり出る。
 
 ## ファイル
 

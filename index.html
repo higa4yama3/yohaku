@@ -80,7 +80,7 @@
       <input type="color" id="bg" value="#ffffff">
     </label>
   </div>
-  <p class="note">余白は長辺に対する比率。短辺側は中央に置く。書き出しは JPEG で、位置情報などの EXIF は残らない。</p>
+  <p class="note">余白は横幅（短辺）に対する比率。型を変えても写真の幅は同じで、上下の白だけ変わる。書き出しは JPEG で、位置情報などの EXIF は残らない。</p>
 </main>
 <div class="bar">
   <button id="pick">写真を選ぶ</button>
@@ -99,9 +99,9 @@
   const RATIOS = { '1:1': [1, 1], '4:5': [4, 5], '9:16': [9, 16] };
 
   // 添付のスクショから測った基準: 正方形の背景に 3:2 の写真。左右の余白が背景の 6.5%、上下は中央。
-  // 一般化: 余白 m は背景の長辺の比率。写真は (W-2m, H-2m) に収まる最大の大きさで中央に置く。
+  // 一般化: 余白 m は背景の短辺（横幅）の比率。型を変えても写真の幅が揃う。写真は (W-2m, H-2m) に収まる最大の大きさで中央に置く。
   function layout(W, H, pw, ph, marginPct) {
-    const m = Math.round(Math.max(W, H) * marginPct / 100);
+    const m = Math.round(Math.min(W, H) * marginPct / 100);
     const s = Math.min((W - 2 * m) / pw, (H - 2 * m) / ph);
     const w = Math.round(pw * s), h = Math.round(ph * s);
     return { x: Math.round((W - w) / 2), y: Math.round((H - h) / 2), w, h, m };
