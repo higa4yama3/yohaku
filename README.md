@@ -1,39 +1,41 @@
-# 余白 / yohaku
+# yohaku (余白)
 
-写真の周りへ白い余白を付け、Instagram で切られずに出すための小さな Web アプリ。
+A tiny web app that pads a photo with a white margin so Instagram shows the whole frame instead of cropping it.
 
 https://higa4yama3.github.io/yohaku/
 
-A tiny web app that pads a photo with a white margin so Instagram shows the whole frame. Runs entirely in the browser; nothing is uploaded.
+Everything runs in the browser. Nothing is uploaded.
 
-## 何ができるか
+## What it does
 
-- 写真を選ぶと、白い背景の中央に置いた絵が出る
-- 型は正方形 1:1、フィード 4:5、ストーリー 9:16
-- 余白は横幅に対する比率。既定は 6.5%。型を変えても写真の幅は同じで、上下の白だけ変わる
-- 背景の色を変えられる
-- 保存すると JPEG（長辺 1080 px、または 2160 px）が共有シートに出る。iPhone なら「画像を保存」で写真アプリに入る
+- Pick a photo and it is placed in the centre of a white canvas
+- Canvas shapes: square 1:1, feed 4:5, story 9:16
+- Margin is a percentage of the canvas width. Default 6.5%. Changing the shape keeps the photo the same size and only adds white above and below
+- Background colour is adjustable
+- Save exports a JPEG (1080 px wide, or 2160 px) through the share sheet. On iPhone, "Save Image" puts it in Photos
 
-写真はブラウザの中で処理し、サーバーには送らない。Canvas で描き直すので、撮影場所などの EXIF は書き出しに残らない。
+The photo is redrawn on a canvas, so EXIF data such as location is not carried into the export.
 
-## iPhone で使う
+## On iPhone
 
-1. Safari で上の URL を開く
-2. 共有ボタンを押し、「ホーム画面に追加」
-3. 以後はホーム画面の「余白」から開く。一度開けばオフラインでも動く
+1. Open the URL above in Safari
+2. Share button, then "Add to Home Screen"
+3. Launch it from the home screen. After the first visit it works offline
 
-## 余白の決め方
+## Why 6.5%
 
-手本にした Instagram の白いカードを測った値から決めた。
+The number was measured from an Instagram post I liked: a 3:2 photo on a square white background.
 
-| 測ったもの | 値 |
+| Measured | Value |
 |---|---|
-| 背景 | 正方形 |
-| 写真 | 3:2 |
-| 左右の余白 | 背景の 6.5% |
-| 上下 | 中央 |
+| Background | square |
+| Photo | 3:2 |
+| Left and right margin | 6.5% of the background |
+| Top and bottom | centred |
 
-一般化すると、余白 m を背景の横幅（短辺）× 6.5% とし、写真は幅 W−2m、高さ H−2m に収まる最大の大きさで中央に置く。1080×1080 に 3:2 の写真を置くと、写真は 940×627、余白は左右 70 px。4:5 や 9:16 にしても写真は 940×627 のままで、上下の白だけ増える。
+With that geometry the photo covers 50.5% of the square, so photo and white weigh the same, while the thin sides make it read as a page rather than a mat.
+
+Generalised: margin `m` is 6.5% of the canvas width, and the photo is scaled to the largest size that fits inside `W − 2m` by `H − 2m`, then centred. On a 1080 × 1080 canvas a 3:2 photo becomes 940 × 627 with 70 px on each side. The same photo on 4:5 or 9:16 stays 940 × 627; only the white above and below grows.
 
 ```js
 function layout(W, H, pw, ph, marginPct) {
@@ -44,26 +46,26 @@ function layout(W, H, pw, ph, marginPct) {
 }
 ```
 
-ストーリーに出すときは、9:16 で書き出すより、1:1 で書き出した正方形を Instagram のストーリー作成で色の背景の上に置くほうが、白い枠がはっきり出る。
+For stories, exporting 1:1 and placing the square on a coloured background in Instagram's story editor gives a clearer frame than exporting 9:16.
 
-## ファイル
+## Files
 
-| ファイル | 役割 |
+| File | Role |
 |---|---|
-| `index.html` | 本体。画面、`layout()`、書き出し。iPhone 用のアイコンは base64 の PNG で埋めてある |
-| `manifest.webmanifest` | ホーム画面に置いたときにブラウザの枠なしで開く設定。アイコンは data URL の SVG |
-| `sw.js` | 一度開いた後はオフラインでも開けるように 3 ファイルを端末に置く Service Worker |
+| `index.html` | The app: UI, `layout()`, export. The iOS home-screen icon is embedded as a base64 PNG |
+| `manifest.webmanifest` | Standalone display when added to the home screen. Icon is an SVG data URL |
+| `sw.js` | Service worker that caches the three files so the app opens offline |
 
-依存はない。ビルドもない。3 ファイルを静的に配信すれば動く。
+No dependencies, no build step. Serve the three files statically and it works.
 
-## 自分で置く
+## Self-hosting
 
-3 ファイルを任意の https のサーバーに置く。パスは相対なので、`https://example.com/yohaku/` のような下層でも動く。Service Worker は https か localhost でだけ登録される。
+Put the three files on any HTTPS server. Paths are relative, so a subdirectory such as `https://example.com/yohaku/` works. The service worker only registers over HTTPS or localhost.
 
-手元で試すときは、次のコマンドで配信して開く。
+To try it locally:
 
 ```bash
 python3 -m http.server 8000
 ```
 
-`sw.js` を含めて何かを直したら、`sw.js` の `VERSION` を上げる。古い版を置いた端末は、次に開いたときに新版を取り、もう一度開き直すと切り替わる。
+After changing anything, bump `VERSION` in `sw.js`. Devices with the old version fetch the new one on the next open and switch on the open after that.
